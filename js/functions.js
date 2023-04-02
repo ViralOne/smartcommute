@@ -94,46 +94,57 @@ function autoRefresh() {
     }
 }
 
+// Helper to create button for the bus route
+function createButton(text, classes, clickHandler) {
+    const button = document.createElement('button');
+    button.innerText = text;
+    button.classList.add(classes, 'button', 'is-primary', 'is-responsive', 'wide-button');
+
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      button.classList.add('is-large');
+    } else {
+      button.classList.add('is-medium');
+    }
+
+    button.addEventListener('click', clickHandler);
+    
+    return button;
+}
+
 // Call API and fetch all the Bus Routes
 // Create two buttons for each ID
 function fetchLines() {
     fetch('http://81.196.186.121:8080/TripPlanner/service/lines')
-        .then(response => response.json())
-        .then(data => {
-            const lines = data.allLines;
-            const container = document.createElement('div');
-            lines.forEach(line => {
-                const id = line.id;
-                if (id > 0) {
-                    const [desc1, desc2] = line.description.split(':');
-
-                    const lineElem = document.createElement('div');
-                    lineElem.classList.add('line');
-
-                    const idElem = document.createElement('span');
-                    idElem.innerText = `Autobuz: ${id}`;
-                    lineElem.appendChild(idElem);
-
-                    const first_route = document.createElement('button');
-                    first_route.innerText = desc1;
-                    first_route.classList.add('button', 'is-primary', 'is-full', 'is-responsive', 'wide-button');
-                    first_route.addEventListener('click', () => {
-                        window.location.href = `?bus=${id}&way=tour`;
-                    });
-                    lineElem.appendChild(first_route);
-
-                    const second_route = document.createElement('button');
-                    second_route.innerText = desc2;
-                    second_route.classList.add('button', 'is-primary', 'is-outlined', 'is-responsive', 'wide-button');
-                    second_route.addEventListener('click', () => {
-                        window.location.href = `?bus=${id}&way=retour`;
-                    });
-                    lineElem.appendChild(second_route);
-
-                    container.appendChild(lineElem);
-                }
+      .then(response => response.json())
+      .then(data => {
+        const lines = data.allLines;
+        const container = document.createElement('div');
+        lines.forEach(line => {
+          const id = line.id;
+          if (id > 0) {
+            const [desc1, desc2] = line.description.split(':');
+  
+            const lineElem = document.createElement('div');
+            lineElem.classList.add('line');
+  
+            const idElem = document.createElement('span');
+            idElem.innerText = `Autobuz: ${id}`;
+            lineElem.appendChild(idElem);
+  
+            const first_route = createButton(desc1, ['is-full'], () => {
+              window.location.href = `?bus=${id}&way=tour`;
             });
-            document.body.appendChild(container);
-        })
-        .catch(error => console.error(error));
+            lineElem.appendChild(first_route);
+  
+            const second_route = createButton(desc2, ['is-outlined'], () => {
+              window.location.href = `?bus=${id}&way=retour`;
+            });
+            lineElem.appendChild(second_route);
+  
+            container.appendChild(lineElem);
+          }
+        });
+        document.body.appendChild(container);
+      })
+      .catch(error => console.error(error));
 }
