@@ -1,10 +1,10 @@
 # 🚌 Tursib LiveMap
 
-### Tursib LiveMap is a web application that displays the real-time location of Tursib buses in Sibiu, Romania on a map. The app uses Leaflet to display the map and fetches the bus location data from the Tursib API. The app allows the user to follow a specific bus on the map and displays the routes of all available buses.
+Tursib LiveMap is a web application that displays the real-time location of Tursib buses in Sibiu, Romania on a map. The app uses Leaflet to display the map and fetches the bus location data from the Tursib API. The app allows the user to follow a specific bus on the map and displays the routes of all available buses.
 
 # Installation
 
-### No installation is required to use the Tursib LiveMap application. Simply visit the webpage and the application will load in your web browser.
+No installation is required to use the Tursib LiveMap application. Simply visit the webpage and the application will load in your web browser.
 
 # Usage
 
