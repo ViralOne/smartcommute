@@ -13,6 +13,13 @@ No installation is required to use the Tursib LiveMap application. Simply visit 
 - Optionally, click the "Follow the Bus" checkbox to center the map view on the selected bus.
 - The map will display the real-time location of the selected bus.
 
+# To do
+- UI
+  - [ ] Update design for Mobile
+  - [ ] Update design for Desktop
+  - [ ] (Update map marker icon)[https://leafletjs.com/examples/custom-icons/]
+- ?
+
 # Dependencies
 
 - Leaflet 1.7.1
