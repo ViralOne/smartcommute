@@ -147,6 +147,10 @@ function fetchLines() {
             const container_buttons = document.createElement('div');
             const dropdown_route_list = document.createElement('select');
             dropdown_route_list.classList.add('dropdown');
+            
+            const centered_dropdown = document.createElement('div');
+            dropdown_route_list.classList.add('center');
+            centered_dropdown.appendChild(dropdown_route_list);
 
             route_types.forEach(route_type => {
                 const route_option = document.createElement('option');

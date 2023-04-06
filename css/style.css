@@ -39,3 +39,15 @@
     width: 100%;
     margin-top: 10px;
 }
+
+select {
+  font-size: 18px; /* Adjust font size as needed */
+  text-align: center;
+  margin: 0 auto !important;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  padding: 5px;
+}
