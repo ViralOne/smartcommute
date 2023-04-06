@@ -26,7 +26,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 fetchLines();
 
 try {
-     // Try to call setInitialView() to set the initial zoom level and center the map view on the initial point
+    // Try to call setInitialView() to set the initial zoom level and center the map view on the initial point
     setInitialView();
 
     // Try to call autoRefresh()
@@ -101,50 +101,108 @@ function createButton(text, classes, clickHandler) {
     button.classList.add(classes, 'button', 'is-primary', 'is-responsive', 'wide-button');
 
     if (window.matchMedia('(max-width: 767px)').matches) {
-      button.classList.add('is-large');
+        button.classList.add('is-large');
     } else {
-      button.classList.add('is-medium');
+        button.classList.add('is-medium');
     }
 
     button.addEventListener('click', clickHandler);
-    
+
     return button;
 }
 
+// Define all the possible route types
+const route_types = [{
+        text: 'Selecteaza traseu',
+        ids: []
+    },
+    {
+        text: 'Trasee principale',
+        ids: [1, 2, 3, 4, 5]
+    },
+    {
+        text: 'Trasee secundare',
+        ids: [...Array(14).keys()].map(i => i + 6)
+    },
+    {
+        text: 'Trasee profesionale',
+        ids: [...Array(9).keys()].map(i => i + 111)
+    },
+    {
+        text: 'Trasee elevi',
+        ids: [...Array(7).keys()].map(i => i + 71)
+    },
+    {
+        text: 'Trasee turistice',
+        ids: [22]
+    }
+];
+
 // Call API and fetch all the Bus Routes
-// Create two buttons for each ID
 function fetchLines() {
     fetch('http://81.196.186.121:8080/TripPlanner/service/lines')
-      .then(response => response.json())
-      .then(data => {
-        const lines = data.allLines;
-        const container = document.createElement('div');
-        lines.forEach(line => {
-          const id = line.id;
-          if (id > 0) {
-            const [desc1, desc2] = line.description.split(':');
-  
-            const lineElem = document.createElement('div');
-            lineElem.classList.add('line');
-  
-            const idElem = document.createElement('span');
-            idElem.innerText = `Autobuz: ${id}`;
-            lineElem.appendChild(idElem);
-  
-            const first_route = createButton(desc1, ['is-full'], () => {
-              window.location.href = `?bus=${id}&way=tour`;
+        .then(response => response.json())
+        .then(data => {
+            const lines = data.allLines;
+            const container_buttons = document.createElement('div');
+            const dropdown_route_list = document.createElement('select');
+            dropdown_route_list.classList.add('dropdown');
+
+            route_types.forEach(route_type => {
+                const route_option = document.createElement('option');
+                route_option.value = route_type.text;
+                route_option.innerHTML = route_type.text;
+                dropdown_route_list.appendChild(route_option);
             });
-            lineElem.appendChild(first_route);
-  
-            const second_route = createButton(desc2, ['is-outlined'], () => {
-              window.location.href = `?bus=${id}&way=retour`;
+
+            const selectedOption = new URLSearchParams(window.location.search).get('type');
+            if (selectedOption) {
+                dropdown_route_list.value = selectedOption;
+                if (dropdown_route_list.value != "Selecteaza traseu") {
+                    updateLines(selectedOption, lines, container_buttons);
+                }
+            }
+
+            dropdown_route_list.addEventListener('change', () => {
+                const selectedOption = dropdown_route_list.options[dropdown_route_list.selectedIndex].value;
+                updateLines(selectedOption, lines, container_buttons);
             });
-            lineElem.appendChild(second_route);
-  
-            container.appendChild(lineElem);
-          }
-        });
-        document.body.appendChild(container);
-      })
-      .catch(error => console.error(error));
+
+            document.body.appendChild(dropdown_route_list);
+            document.body.appendChild(container_buttons);
+        })
+        .catch(error => console.error(error));
+}
+
+function updateLines(selectedOption, lines, container_buttons) {
+    const filteredLines = lines.filter(line => route_types.find(option => option.text === selectedOption).ids.includes(line.id));
+    container_buttons.innerHTML = '';
+
+    const lineElems = filteredLines.map(line => createLineElement(line, selectedOption));
+    lineElems.forEach(element_linie_bus => {
+        container_buttons.appendChild(element_linie_bus);
+    });
+}
+
+function createLineElement(line, selectedOption) {
+    const [first_route_description, second_route_description] = line.description.split(':');
+
+    const element_linie_bus = document.createElement('div');
+    element_linie_bus.classList.add('line');
+
+    const text_number_bus = document.createElement('span');
+    text_number_bus.innerText = `Autobuz: ${line.id}`;
+    element_linie_bus.appendChild(text_number_bus);
+
+    const first_route = createButton(first_route_description, ['is-full'], () => {
+        window.location.href = `?bus=${line.id}&way=tour&type=${selectedOption}`;
+    });
+    element_linie_bus.appendChild(first_route);
+
+    const second_route = createButton(second_route_description, ['is-outlined'], () => {
+        window.location.href = `?bus=${line.id}&way=retour&type=${selectedOption}`;
+    });
+    element_linie_bus.appendChild(second_route);
+
+    return element_linie_bus;
 }
