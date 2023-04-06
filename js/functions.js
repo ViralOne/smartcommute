@@ -119,32 +119,55 @@ function fetchLines() {
       .then(data => {
         const lines = data.allLines;
         const container = document.createElement('div');
-        lines.forEach(line => {
-          const id = line.id;
-          if (id > 0) {
+        const dropdown = document.createElement('select');
+        const options = [
+          { text: 'Selecteaza traseu', ids: [] },
+          { text: 'Trasee principale', ids: [1, 2, 3, 4, 5] },
+          { text: 'Trasee secundare', ids: [...Array(14).keys()].map(i => i + 6) },
+          { text: 'Trasee profesionale', ids: [...Array(9).keys()].map(i => i + 111) },
+          { text: 'Trasee elevi',  ids: [...Array(7).keys()].map(i => i + 71) },
+          { text: 'Traseu Paltinis', ids: [22] }
+        ];
+  
+        options.forEach(option => {
+          const opt = document.createElement('option');
+          opt.value = option.text;
+          opt.innerHTML = option.text;
+          dropdown.appendChild(opt);
+        });
+  
+        dropdown.addEventListener('change', () => {
+          const selectedOption = dropdown.options[dropdown.selectedIndex].value;
+          const filteredLines = lines.filter(line => options.find(option => option.text === selectedOption).ids.includes(line.id));
+          container.innerHTML = '';
+  
+          filteredLines.forEach(line => {
             const [desc1, desc2] = line.description.split(':');
   
             const lineElem = document.createElement('div');
             lineElem.classList.add('line');
   
             const idElem = document.createElement('span');
-            idElem.innerText = `Autobuz: ${id}`;
+            idElem.innerText = `Autobuz: ${line.name}`;
             lineElem.appendChild(idElem);
   
             const first_route = createButton(desc1, ['is-full'], () => {
-              window.location.href = `?bus=${id}&way=tour`;
+              window.location.href = `?bus=${line.id}&way=tour`;
             });
             lineElem.appendChild(first_route);
   
             const second_route = createButton(desc2, ['is-outlined'], () => {
-              window.location.href = `?bus=${id}&way=retour`;
+              window.location.href = `?bus=${line.id}&way=retour`;
             });
             lineElem.appendChild(second_route);
   
             container.appendChild(lineElem);
-          }
+          });
         });
+  
+        document.body.appendChild(dropdown);
         document.body.appendChild(container);
       })
       .catch(error => console.error(error));
-}
+  }
+  
