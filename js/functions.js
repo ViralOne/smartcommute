@@ -26,16 +26,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 fetchLines();
 
 try {
-    // Try to call setInitialView() to set the initial zoom level and center the map view on the initial point
+    // Try to call setInitialView() to set the initial zoom level and center map
     setInitialView();
-
-    // Try to call autoRefresh()
-    // All the busses has an working interval
-    // In case of error (the bus is not working anymore) enable flag stopRefresh
     autoRefresh();
 } catch (error) {
     console.log(error);
-    stopRefresh = true;
 }
 
 // Use the fitBounds method to set the initial zoom level and center the map view on the initial point
@@ -58,7 +53,7 @@ function setInitialView() {
         .catch(error => console.error(error));
 }
 
-// Define a function to update the map with the latest data
+// Update the map with the latest data
 function updateMap() {
     fetch(url)
         .then(response => response.json())
@@ -71,24 +66,26 @@ function updateMap() {
                 // Update the marker position
                 marker.setLatLng([lat, lng]);
 
-                // If the "Follow the Bus" checkbox is checked, update the map view to center on the marker
+                // Update map view to center on the marker
                 if (document.getElementById("followMarker").checked) {
                     map.setView([lat, lng]);
                 }
             } else {
                 console.log("GPS Autobuz offline")
+                
+                // All the busses have an working interval
+                // In case of error (ex. the bus is not sending GPS coordinates anymore) enable stopRefresh flag
                 stopRefresh = true
             }
         })
         .catch(error => {
             console.error(error);
-            stopRefresh = true;
         });
 }
 
 function autoRefresh() {
     if (!stopRefresh) {
-        // Call the updateMap() function immediately to display the initial data
+        // Call updateMap() function immediately to display the initial data
         updateMap();
         setTimeout(autoRefresh, 5000); // call again after 5 seconds
     }
@@ -138,7 +135,7 @@ const route_types = [{
     }
 ];
 
-// Call API and fetch all the Bus Routes
+// Call API to fetch all the Bus Routes and create the buttons
 function fetchLines() {
     fetch('http://81.196.186.121:8080/TripPlanner/service/lines')
         .then(response => response.json())
@@ -178,31 +175,38 @@ function fetchLines() {
         .catch(error => console.error(error));
 }
 
+// Update the displayed bus routes based on the selected route type
 function updateLines(selectedOption, lines, container_buttons) {
+    // Filter the available bus routes by the selected route type
     const filteredLines = lines.filter(line => route_types.find(option => option.text === selectedOption).ids.includes(line.id));
     container_buttons.innerHTML = '';
-
+    
+    // Create a button element for each bus route and add them to the container
     const lineElems = filteredLines.map(line => createLineElement(line, selectedOption));
     lineElems.forEach(element_linie_bus => {
         container_buttons.appendChild(element_linie_bus);
     });
 }
 
+// Create a button element for a given bus route
 function createLineElement(line, selectedOption) {
     const [first_route_description, second_route_description] = line.description.split(':');
 
     const element_linie_bus = document.createElement('div');
     element_linie_bus.classList.add('line');
 
+    // Create a span element for the bus number and add it to the div
     const text_number_bus = document.createElement('span');
     text_number_bus.innerText = `Autobuz: ${line.id}`;
     element_linie_bus.appendChild(text_number_bus);
 
+    // Create a button for the first route and add it to the div
     const first_route = createButton(first_route_description, ['is-full'], () => {
         window.location.href = `?bus=${line.id}&way=tour&type=${selectedOption}`;
     });
     element_linie_bus.appendChild(first_route);
 
+    // Create a button for the second route and add it to the div
     const second_route = createButton(second_route_description, ['is-outlined'], () => {
         window.location.href = `?bus=${line.id}&way=retour&type=${selectedOption}`;
     });
