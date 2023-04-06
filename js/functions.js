@@ -118,56 +118,78 @@ function fetchLines() {
       .then(response => response.json())
       .then(data => {
         const lines = data.allLines;
-        const container = document.createElement('div');
-        const dropdown = document.createElement('select');
+        const container_buttons = document.createElement('div');
+        const dropdown_route_list = document.createElement('select');
+        dropdown_route_list.classList.add('dropdown');
+        
         const options = [
           { text: 'Selecteaza traseu', ids: [] },
           { text: 'Trasee principale', ids: [1, 2, 3, 4, 5] },
           { text: 'Trasee secundare', ids: [...Array(14).keys()].map(i => i + 6) },
           { text: 'Trasee profesionale', ids: [...Array(9).keys()].map(i => i + 111) },
           { text: 'Trasee elevi',  ids: [...Array(7).keys()].map(i => i + 71) },
-          { text: 'Traseu Paltinis', ids: [22] }
+          { text: 'Trasee turistice', ids: [22] }
         ];
   
-        options.forEach(option => {
-          const opt = document.createElement('option');
-          opt.value = option.text;
-          opt.innerHTML = option.text;
-          dropdown.appendChild(opt);
-        });
-  
-        dropdown.addEventListener('change', () => {
-          const selectedOption = dropdown.options[dropdown.selectedIndex].value;
-          const filteredLines = lines.filter(line => options.find(option => option.text === selectedOption).ids.includes(line.id));
-          container.innerHTML = '';
-  
-          filteredLines.forEach(line => {
-            const [desc1, desc2] = line.description.split(':');
-  
-            const lineElem = document.createElement('div');
-            lineElem.classList.add('line');
-  
-            const idElem = document.createElement('span');
-            idElem.innerText = `Autobuz: ${line.name}`;
-            lineElem.appendChild(idElem);
-  
-            const first_route = createButton(desc1, ['is-full'], () => {
-              window.location.href = `?bus=${line.id}&way=tour`;
-            });
-            lineElem.appendChild(first_route);
-  
-            const second_route = createButton(desc2, ['is-outlined'], () => {
-              window.location.href = `?bus=${line.id}&way=retour`;
-            });
-            lineElem.appendChild(second_route);
-  
-            container.appendChild(lineElem);
+        options.forEach(route_type => {
+            const route_option = document.createElement('option');
+            route_option.value = route_type.text;
+            route_option.innerHTML = route_type.text;
+            dropdown_route_list.appendChild(route_option);
           });
-        });
+    
+          const selectedOption = new URLSearchParams(window.location.search).get('type');
+          if (selectedOption) {
+            dropdown_route_list.value = selectedOption;
+            if (dropdown_route_list.value != "Selecteaza traseu"){
+                const selectedOption = dropdown_route_list.options[dropdown_route_list.selectedIndex].value;
+                const filteredLines = lines.filter(line => options.find(option => option.text === selectedOption).ids.includes(line.id));
+                container_buttons.innerHTML = '';
+    
+                filteredLines.forEach(line => {
+                    const lineElem = createLineElement(line, selectedOption);
+                    container_buttons.appendChild(lineElem);
+                });
+            }
+          }
+    
+          dropdown_route_list.addEventListener('change', () => {
+            const selectedOption = dropdown_route_list.options[dropdown_route_list.selectedIndex].value;
+            const filteredLines = lines.filter(line => options.find(option => option.text === selectedOption).ids.includes(line.id));
+            container_buttons.innerHTML = '';
+    
+            filteredLines.forEach(line => {
+                const lineElem = createLineElement(line, selectedOption);
+                container_buttons.appendChild(lineElem);
+            });
+          });
+    
+          document.body.appendChild(dropdown_route_list);
+          document.body.appendChild(container_buttons);
+        })
+        .catch(error => console.error(error));
+}
+
+function createLineElement(line, selectedOption) {
+    const [desc1, desc2] = line.description.split(':');
   
-        document.body.appendChild(dropdown);
-        document.body.appendChild(container);
-      })
-      .catch(error => console.error(error));
+    const lineElem = document.createElement('div');
+    lineElem.classList.add('line');
+  
+    const idElem = document.createElement('span');
+    idElem.innerText = `Autobuz: ${line.id}`;
+    lineElem.appendChild(idElem);
+  
+    const first_route = createButton(desc1, ['is-full'], () => {
+      window.location.href = `?bus=${line.id}&way=tour&type=${selectedOption}`;
+    });
+    lineElem.appendChild(first_route);
+  
+    const second_route = createButton(desc2, ['is-outlined'], () => {
+      window.location.href = `?bus=${line.id}&way=retour&type=${selectedOption}`;
+    });
+    lineElem.appendChild(second_route);
+  
+    return lineElem;
   }
   
