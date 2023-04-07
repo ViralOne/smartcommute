@@ -13,11 +13,24 @@ No installation is required to use the Tursib LiveMap application. Simply visit 
 - Optionally, click the "Follow the Bus" checkbox to center the map view on the selected bus.
 - The map will display the real-time location of the selected bus.
 
+# Docker container
+
+To build and run the Docker image follow the next steps:
+`docker build . -t smartcommute:0.0.1`
+`docker run --rm -p 8080:80 smartcommute:0.0.1`
+
+Or you can use Docker compose:
+`docker-compose up`
+
+And to stop the instance:
+`docker-compose down`
+
 # To do
 - UI
   - [ ] Update design for Mobile
   - [ ] Update design for Desktop
-  - [ ] (Update map marker icon)[https://leafletjs.com/examples/custom-icons/]
+  - [ ] [Update map marker icon](https://leafletjs.com/examples/custom-icons/)
+  - [x] Create dockerized version
 - ?
 
 # Dependencies
