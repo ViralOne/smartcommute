@@ -1,5 +1,6 @@
 // Define flags
 let stopRefresh = false;
+let shareLocation = false;
 
 // Initialize the map with a default location and zoom level
 const map = L.map('map').setView([0, 0], 1);
@@ -78,6 +79,21 @@ function updateMap() {
                     map.setView([lat, lng]);
                 }
 
+                if (document.getElementById("getUserLiveLocation").checked) {
+                    if (shareLocation !== true) {
+                        getUserLocation()
+                            .then((location) => {
+                                shareLocation = true;
+                            })
+                            .catch((error) => {
+                                console.error(error);
+                            });
+                    }
+                }
+                else{
+                    shareLocation = false;
+                }
+
                 // Draw map
                 drawRoute(bus_number);
             } else {
@@ -85,7 +101,7 @@ function updateMap() {
                 drawRoute(bus_number);
                 
                 // All the busses have an working interval
-                // In case of error (ex. the bus is not sending GPS coordinates anymore) enable stopRefresh flag
+                // In case of error (ex. the bus is not sending GPS coordinates anymore) enable the flag
                 stopRefresh = true
             }
         })
@@ -223,5 +239,31 @@ function drawRoute(busNumber){
         L.polyline(fullRoute, { color: 'red' }).addTo(map);
     }).catch(error => {
         console.error(error);
+    });
+}
+
+function getUserLocation() {
+    let userMarkerGroup = L.layerGroup().addTo(map);
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            console.error('Geolocation is not supported');
+            reject(new Error('Geolocation is not supported'));
+            shareLocation = false;
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                const { latitude, longitude } = position.coords;
+                L.marker([latitude, longitude]).addTo(userMarkerGroup);
+                map.setView([latitude, longitude], 14);
+                resolve({ lat: latitude, lng: longitude });
+            },
+            error => {
+                console.error(error);
+                reject(error);
+                shareLocation = false;
+            }
+        );
     });
 }
