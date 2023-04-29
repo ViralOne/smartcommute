@@ -29,11 +29,14 @@ And to stop the instance:
 - UI
   - [ ] Update design for Mobile
   - [ ] Update design for Desktop
-  - [ ] [Update map marker icon](https://leafletjs.com/examples/custom-icons/)
+  - [ ] Add stops on the map
+  - [ ] Add 'Use my location'
+  - [x] [Update map marker icon](https://leafletjs.com/examples/custom-icons/)
+  - [x] Draw map route for each Bus
   - [x] Create dockerized version
 - ?
 
 # Dependencies
 
-- Leaflet 1.7.1
+- Leaflet 1.9.3
 - Bulma 0.9.4
