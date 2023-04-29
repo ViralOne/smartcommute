@@ -4,8 +4,14 @@ let stopRefresh = false;
 // Initialize the map with a default location and zoom level
 const map = L.map('map').setView([0, 0], 1);
 
-// Add a marker to the map at the given location
-const marker = L.marker([0, 0]).addTo(map);
+// Create marker icon
+var busIcon = L.icon({
+    iconUrl: 'img/bus.png',
+    iconSize: [50, 40], // size of the icon
+});
+
+// Add a marker to the map at the given location and use a costum icon
+const marker = L.marker([0, 0], {icon: busIcon}).addTo(map);
 
 // Define the API endpoint URL
 // Use URL Path: ?bus=5&way=tour
