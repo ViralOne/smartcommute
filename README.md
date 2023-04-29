@@ -30,7 +30,7 @@ And to stop the instance:
   - [ ] Update design for Mobile
   - [ ] Update design for Desktop
   - [ ] Add stops on the map
-  - [ ] Add 'Use my location'
+  - [x] Add 'Get my location'
   - [x] [Update map marker icon](https://leafletjs.com/examples/custom-icons/)
   - [x] Draw map route for each Bus
   - [x] Create dockerized version
