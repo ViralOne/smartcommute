@@ -10,6 +10,7 @@ const marker = L.marker([0, 0]).addTo(map);
 // Define the API endpoint URL
 // Use URL Path: ?bus=5&way=tour
 const urlParams = new URLSearchParams(window.location.search);
+const mapZoom = 14;
 const bus_number = urlParams.get('bus');
 const bus_direction = urlParams.get('way');
 const url = 'http://81.196.186.121:8080/TripPlanner/service/vehicles/line/' + bus_number + '/direction/' + bus_direction;
@@ -17,7 +18,7 @@ const url = 'http://81.196.186.121:8080/TripPlanner/service/vehicles/line/' + bu
 // Add a tile layer to the map
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
-    maxZoom: 18,
+    maxZoom: mapZoom,
     tileSize: 512,
     zoomOffset: -1
 }).addTo(map);
@@ -38,9 +39,9 @@ function setInitialView() {
     fetch(url)
         .then(response => response.json())
         .then(data => {
-            // Get the latitude and longitude from the JSON data
-            const lat = data.vehiclesByLineAndDirection[0].lat / 1000000;
-            const lng = data.vehiclesByLineAndDirection[0].lng / 1000000;
+            // Set initial location in the base city
+            const lat = 45.79;
+            const lng = 24.13;
 
             // Set the initial view of the map
             const bounds = [
@@ -70,8 +71,12 @@ function updateMap() {
                 if (document.getElementById("followMarker").checked) {
                     map.setView([lat, lng]);
                 }
+
+                // Draw map
+                drawRoute(bus_number);
             } else {
                 console.log("GPS Autobuz offline")
+                drawRoute(bus_number);
                 
                 // All the busses have an working interval
                 // In case of error (ex. the bus is not sending GPS coordinates anymore) enable stopRefresh flag
@@ -109,30 +114,12 @@ function createButton(text, classes, clickHandler) {
 }
 
 // Define all the possible route types
-const route_types = [{
-        text: 'Selecteaza traseu',
-        ids: []
-    },
-    {
-        text: 'Trasee principale',
-        ids: [1, 2, 3, 4, 5]
-    },
-    {
-        text: 'Trasee secundare',
-        ids: [...Array(14).keys()].map(i => i + 6)
-    },
-    {
-        text: 'Trasee profesionale',
-        ids: [...Array(9).keys()].map(i => i + 111)
-    },
-    {
-        text: 'Trasee elevi',
-        ids: [...Array(7).keys()].map(i => i + 71)
-    },
-    {
-        text: 'Trasee turistice',
-        ids: [22]
-    }
+const route_types = [  { text: 'Selecteaza traseu', ids: [] },
+  { text: 'Trasee principale', ids: [1, 2, 3, 4, 5] },
+  { text: 'Trasee secundare', ids: Array.from({ length: 14 }, (_, i) => i + 6) },
+  { text: 'Trasee profesionale', ids: Array.from({ length: 9 }, (_, i) => i + 111) },
+  { text: 'Trasee elevi', ids: Array.from({ length: 7 }, (_, i) => i + 71) },
+  { text: 'Trasee turistice', ids: [22] }
 ];
 
 // Call API to fetch all the Bus Routes and create the buttons
@@ -213,4 +200,22 @@ function createLineElement(line, selectedOption) {
     element_linie_bus.appendChild(second_route);
 
     return element_linie_bus;
+}
+
+// Get specific coordinates for a requested bus defined by `busNumber`
+function fetchRoute(busNumber) {
+    const url = `http://81.196.186.121:8080/TripPlanner/service/gislinks/line/${busNumber}/variant/1`;
+    return fetch(url)
+      .then(response => response.json())
+      .then(data => data.gislinksForLineAndVariant);
+}
+
+// Draw the bus route by using polyline
+function drawRoute(busNumber){
+    fetchRoute(busNumber).then(data => {
+        const fullRoute = data.map(coord => L.latLng(coord.lat / 1000000, coord.lng / 1000000));
+        L.polyline(fullRoute, { color: 'red' }).addTo(map);
+    }).catch(error => {
+        console.error(error);
+    });
 }
