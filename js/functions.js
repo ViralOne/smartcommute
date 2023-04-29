@@ -183,7 +183,7 @@ function updateLines(selectedOption, lines, container_buttons) {
 
 // Create a button element for a given bus route
 function createLineElement(line, selectedOption) {
-    const [first_route_description, second_route_description] = line.description.split(':');
+    const [second_route_description, first_route_description] = line.description.split(':');
 
     const element_linie_bus = document.createElement('div');
     element_linie_bus.classList.add('line');
