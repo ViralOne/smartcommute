@@ -84,6 +84,9 @@ function updateMap() {
                 if (document.getElementById("followMarker").checked) {
                     map.setView([lat, lng]);
                 }
+                
+                // Place stop markers
+                getStops();                
 
                 if (document.getElementById("getUserLiveLocation").checked) {
                     if (shareLocation !== true) {
@@ -273,8 +276,6 @@ function getUserLocation() {
         );
     });
 }
-
-getStops();
 
 function getStops() {
     fetch('http://81.196.186.121:8080/TripPlanner/service/stops')
