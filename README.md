@@ -1,10 +1,10 @@
-# 🚌 Tursib LiveMap
+# 🚌 Bus LiveMap
 
-Tursib LiveMap is a web application that displays the real-time location of Tursib buses in Sibiu, Romania on a map. The app uses Leaflet to display the map and fetches the bus location data from the Tursib API. The app allows the user to follow a specific bus on the map and displays the routes of all available buses.
+Bus LiveMap is a web application that displays the real-time location of Bus buses on a map. The app uses Leaflet to display the map and fetches the bus location data from the Bus API. The app allows the user to follow a specific bus on the map and displays the routes of all available buses.
 
 # Installation
 
-No installation is required to use the Tursib LiveMap application. Simply visit the webpage and the application will load in your web browser.
+No installation is required to use the Tursib LiveMap application. Simply fork the repo and open the `index.html` in browser.
 
 # Usage
 
@@ -25,16 +25,18 @@ Or you can use Docker compose:
 And to stop the instance:
 `docker-compose down`
 
-# To do
-- UI
-  - [ ] Update design for Mobile
-  - [ ] Update design for Desktop
-  - [ ] Add stops on the map
-  - [x] Add 'Get my location'
-  - [x] [Update map marker icon](https://leafletjs.com/examples/custom-icons/)
-  - [x] Draw map route for each Bus
-  - [x] Create dockerized version
-- ?
+# To do 🔨
+- [ ] Update design for Mobile
+- [ ] Update design for Desktop
+- [x] Add stops on the map
+- [x] Add 'Get my location'
+- [x] [Update map marker icon](https://leafletjs.com/examples/custom-icons/)
+- [x] Draw map route for each Bus
+- [x] Create dockerized version
+
+# Bugs 😔
+- [ ] The map route variant it's hardcoded but for each bus it needs it's own variant and we have to take in consideration that there are two routes that the bus takes: tour & retour.
+- [ ] The logic for obtaining and displaying the stop markers is too simplistic and does not account for all possible scenarios and right now some stops are missing or shown wrong
 
 # Dependencies
 

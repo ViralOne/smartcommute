@@ -5,10 +5,16 @@ let shareLocation = false;
 // Initialize the map with a default location and zoom level
 const map = L.map('map').setView([0, 0], 1);
 
-// Create marker icon
+// Create marker icon for the bus
 var busIcon = L.icon({
     iconUrl: 'img/bus.png',
-    iconSize: [50, 40], // size of the icon
+    iconSize: [40, 40]
+});
+
+// Create marker icon for stops
+var stopPinIcon = L.icon({
+    iconUrl: 'img/pin.png',
+    iconSize: [60, 60]
 });
 
 // Add a marker to the map at the given location and use a costum icon
@@ -17,7 +23,7 @@ const marker = L.marker([0, 0], {icon: busIcon}).addTo(map);
 // Define the API endpoint URL
 // Use URL Path: ?bus=5&way=tour
 const urlParams = new URLSearchParams(window.location.search);
-const mapZoom = 14;
+const mapZoom = 15;
 const bus_number = urlParams.get('bus');
 const bus_direction = urlParams.get('way');
 const url = 'http://81.196.186.121:8080/TripPlanner/service/vehicles/line/' + bus_number + '/direction/' + bus_direction;
@@ -226,7 +232,7 @@ function createLineElement(line, selectedOption) {
 
 // Get specific coordinates for a requested bus defined by `busNumber`
 function fetchRoute(busNumber) {
-    const url = `http://81.196.186.121:8080/TripPlanner/service/gislinks/line/${busNumber}/variant/1`;
+    const url = `http://81.196.186.121:8080/TripPlanner/service/gislinks/line/${busNumber}/variant/51`;
     return fetch(url)
       .then(response => response.json())
       .then(data => data.gislinksForLineAndVariant);
@@ -267,3 +273,35 @@ function getUserLocation() {
         );
     });
 }
+
+getStops();
+
+function getStops() {
+    fetch('http://81.196.186.121:8080/TripPlanner/service/stops')
+      .then(response => response.json())
+      .then(data => {
+        let filteredStops = data.allStops;
+  
+        if (bus_number) {
+          filteredStops = filteredStops.filter(stop => {
+            const traversingLines = stop.traversingLines.split(",");
+            return traversingLines.includes(bus_number.trim());
+          });
+        }
+  
+        if (bus_direction === 'tour') {
+          filteredStops = filteredStops.filter((stop, index) => index % 2 === 0);
+        } else if (bus_direction === 'retour') {
+          filteredStops = filteredStops.filter((stop, index) => index % 2 === 1);
+        }
+  
+        // Loop through each stop and add a marker to the map
+        filteredStops.forEach(stop => {
+          const marker = L.marker([stop.lat / 1000000, stop.lng / 1000000], { icon: stopPinIcon, iconSize: [30, 30], bubblingMouseEvents: false })
+            .addTo(map)
+            .bindPopup(`Statie: ${stop.name}<br> Autobuze ce opresc la aceasta statie: ${stop.traversingLines}`);
+        });
+      })
+      .catch(error => console.error(error));
+}
+  
