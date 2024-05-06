@@ -14,7 +14,7 @@ var busIcon = L.icon({
 // Create marker icon for stops
 var stopPinIcon = L.icon({
     iconUrl: 'img/pin.png',
-    iconSize: [60, 60]
+    iconSize: [24, 24]
 });
 
 // Add a marker to the map at the given location and use a costum icon
