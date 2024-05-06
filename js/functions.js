@@ -24,9 +24,12 @@ const marker = L.marker([0, 0], {icon: busIcon}).addTo(map);
 // Use URL Path: ?bus=5&way=tour
 const urlParams = new URLSearchParams(window.location.search);
 const mapZoom = 15;
-const bus_number = urlParams.get('bus');
-const bus_direction = urlParams.get('way');
-const url = 'http://81.196.186.121:8080/TripPlanner/service/vehicles/line/' + bus_number + '/direction/' + bus_direction;
+const busNumber = urlParams.get('bus');
+const busDirection = urlParams.get('way');
+const baseURL = 'http://81.196.186.121:8080'
+const url = baseURL + '/TripPlanner/service/vehicles/line/' + busNumber + '/direction/' + busDirection;
+var busLinesColor = ['red', 'blue', 'green'];
+var globalVariant = [];
 
 // Add a tile layer to the map
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -43,6 +46,7 @@ try {
     // Try to call setInitialView() to set the initial zoom level and center map
     setInitialView();
     autoRefresh();
+    grabVariant();
 } catch (error) {
     console.log(error);
 }
@@ -102,12 +106,11 @@ function updateMap() {
                 else{
                     shareLocation = false;
                 }
-
-                // Draw map
-                drawRoute(bus_number);
+                // Draw map route
+                drawRoute(busNumber, globalVariant);
             } else {
                 console.log("GPS Autobuz offline")
-                drawRoute(bus_number);
+                drawRoute(busNumber, varu);
                 
                 // All the busses have an working interval
                 // In case of error (ex. the bus is not sending GPS coordinates anymore) enable the flag
@@ -117,6 +120,20 @@ function updateMap() {
         .catch(error => {
             console.error(error);
         });
+}
+
+function grabVariant() {
+    fetch(baseURL + '/TripPlanner/service/stops/line/' + busNumber + '/direction/' + busDirection)
+    .then(response => response.json())
+    .then(data => {
+        const uniqueVariants = new Set();
+        for (const stop of data.lineAndDirectionStops) {
+            uniqueVariants.add(stop.variant);
+        }
+        globalVariant = Array.from(uniqueVariants);
+        return globalVariant
+    })
+    .catch(error => console.error(error));
 }
 
 function autoRefresh() {
@@ -155,7 +172,7 @@ const route_types = [  { text: 'Selecteaza traseu', ids: [] },
 
 // Call API to fetch all the Bus Routes and create the buttons
 function fetchLines() {
-    fetch('http://81.196.186.121:8080/TripPlanner/service/lines')
+    fetch(baseURL + '/TripPlanner/service/lines')
         .then(response => response.json())
         .then(data => {
             const lines = data.allLines;
@@ -234,20 +251,22 @@ function createLineElement(line, selectedOption) {
 }
 
 // Get specific coordinates for a requested bus defined by `busNumber`
-function fetchRoute(busNumber) {
-    const url = `http://81.196.186.121:8080/TripPlanner/service/gislinks/line/${busNumber}/variant/51`;
+function fetchRoute(busNumber, variant) {
+    const url = baseURL + `/TripPlanner/service/gislinks/line/${busNumber}/variant/${variant}`;
     return fetch(url)
       .then(response => response.json())
       .then(data => data.gislinksForLineAndVariant);
 }
 
 // Draw the bus route by using polyline
-function drawRoute(busNumber){
-    fetchRoute(busNumber).then(data => {
-        const fullRoute = data.map(coord => L.latLng(coord.lat / 1000000, coord.lng / 1000000));
-        L.polyline(fullRoute, { color: 'red' }).addTo(map);
-    }).catch(error => {
-        console.error(error);
+function drawRoute(busNumber, variants) {
+    variants.forEach((variant, index) => { // Use index to select color from the array
+        fetchRoute(busNumber, variant).then(data => {
+            const fullRoute = data.map(coord => L.latLng(coord.lat / 1000000, coord.lng / 1000000));
+            L.polyline(fullRoute, { color: busLinesColor[index] }).addTo(map);
+        }).catch(error => {
+            console.error(error);
+        });
     });
 }
 
@@ -278,21 +297,21 @@ function getUserLocation() {
 }
 
 function getStops() {
-    fetch('http://81.196.186.121:8080/TripPlanner/service/stops')
+    fetch(baseURL + '/TripPlanner/service/stops')
       .then(response => response.json())
       .then(data => {
         let filteredStops = data.allStops;
   
-        if (bus_number) {
+        if (busNumber) {
           filteredStops = filteredStops.filter(stop => {
             const traversingLines = stop.traversingLines.split(",");
-            return traversingLines.includes(bus_number.trim());
+            return traversingLines.includes(busNumber.trim());
           });
         }
   
-        if (bus_direction === 'tour') {
+        if (busDirection === 'tour') {
           filteredStops = filteredStops.filter((stop, index) => index % 2 === 0);
-        } else if (bus_direction === 'retour') {
+        } else if (busDirection === 'retour') {
           filteredStops = filteredStops.filter((stop, index) => index % 2 === 1);
         }
   

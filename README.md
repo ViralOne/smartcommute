@@ -33,10 +33,13 @@ And to stop the instance:
 - [x] [Update map marker icon](https://leafletjs.com/examples/custom-icons/)
 - [x] Draw map route for each Bus
 - [x] Create dockerized version
+- [x] Bus variants for all routes
 
 # Bugs 😔
-- [ ] The map route variant it's hardcoded but for each bus it needs it's own variant and we have to take in consideration that there are two routes that the bus takes: tour & retour.
 - [ ] The logic for obtaining and displaying the stop markers is too simplistic and does not account for all possible scenarios and right now some stops are missing or shown wrong
+
+# Icons
+- [FlatIcon.com](https://www.flaticon.com/)
 
 # Dependencies
 
