@@ -108,9 +108,10 @@ function updateMap() {
                 }
                 // Draw map route
                 drawRoute(busNumber, globalVariant);
+                updateBtnName(busNumber);
             } else {
                 console.log("GPS Autobuz offline")
-                drawRoute(busNumber, varu);
+                drawRoute(busNumber, globalVariant);
                 
                 // All the busses have an working interval
                 // In case of error (ex. the bus is not sending GPS coordinates anymore) enable the flag
@@ -150,12 +151,6 @@ function createButton(text, classes, clickHandler) {
     button.innerText = text;
     button.classList.add(classes, 'button', 'is-primary', 'is-responsive', 'wide-button');
 
-    if (window.matchMedia('(max-width: 767px)').matches) {
-        button.classList.add('is-large');
-    } else {
-        button.classList.add('is-medium');
-    }
-
     button.addEventListener('click', clickHandler);
 
     return button;
@@ -176,14 +171,9 @@ function fetchLines() {
         .then(response => response.json())
         .then(data => {
             const lines = data.allLines;
-            const container_buttons = document.createElement('div');
-            const dropdown_route_list = document.createElement('select');
-            dropdown_route_list.classList.add('dropdown');
+            const dropdown_route_list = document.getElementById('route_selection');
+            const container_buttons = document.getElementById('buttonsContainer');
             
-            const centered_dropdown = document.createElement('div');
-            dropdown_route_list.classList.add('center');
-            centered_dropdown.appendChild(dropdown_route_list);
-
             route_types.forEach(route_type => {
                 const route_option = document.createElement('option');
                 route_option.value = route_type.text;
@@ -203,9 +193,6 @@ function fetchLines() {
                 const selectedOption = dropdown_route_list.options[dropdown_route_list.selectedIndex].value;
                 updateLines(selectedOption, lines, container_buttons);
             });
-
-            document.body.appendChild(dropdown_route_list);
-            document.body.appendChild(container_buttons);
         })
         .catch(error => console.error(error));
 }
@@ -324,4 +311,17 @@ function getStops() {
       })
       .catch(error => console.error(error));
 }
-  
+
+function updateBtnName(busNumber) {
+    var button = document.getElementById('show_dialog');
+    button.textContent = `Autobuz: ${busNumber} - Other Routes`;
+}
+
+var dialog = document.querySelector('dialog');
+    document.querySelector('#show_dialog').onclick = function() {
+    dialog.show();
+};
+
+document.querySelector('#close').onclick = function() {
+    dialog.close();
+};

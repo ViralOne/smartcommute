@@ -26,8 +26,8 @@ And to stop the instance:
 `docker-compose down`
 
 # To do 🔨
-- [ ] Update design for Mobile
-- [ ] Update design for Desktop
+- [x] Update design for Mobile
+- [x] Update design for Desktop
 - [x] Add stops on the map
 - [x] Add 'Get my location'
 - [x] [Update map marker icon](https://leafletjs.com/examples/custom-icons/)
@@ -42,6 +42,5 @@ And to stop the instance:
 - [FlatIcon.com](https://www.flaticon.com/)
 
 # Dependencies
-
-- Leaflet 1.9.3
-- Bulma 0.9.4
+- Leaflet 1.9.4
+- Bulma 1.0.0

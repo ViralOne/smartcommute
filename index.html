@@ -6,27 +6,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- include leaflet css and js -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.0/css/bulma.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <div class="card is-fullwidth" style="padding-bottom: 10px;">
-        <div class="columns is-multiline is-mobile">
-            <div class="column">
-                <div id="map"></div>
-                <div>
-                    <input type="checkbox" id="followMarker" checked>
-                    <label for="followMarker">Follow the Bus</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="getUserLiveLocation">
-                    <label for="getUserLiveLocation">Get my location</label>
-                </div>
+    <div class="containeru">
+        <!-- Dialog box -->
+        <dialog>
+            <!-- Div for buttons -->
+            <button id="close" class="is-full button is-default is-responsive">Close</button>
+
+            <!-- Features -->
+            <div>
+                <input type="checkbox" id="followMarker" checked>
+                <label for="followMarker">Follow the Bus</label>
             </div>
-        </div>
+            <div>
+                <input type="checkbox" id="getUserLiveLocation">
+                <label for="getUserLiveLocation">Get my location</label>
+            </div>
+
+            <!-- Select route dropdown -->
+            <select id="route_selection" class="dropdown center "></select>
+            
+            <!-- Buttons container -->
+            <div class="scroll">
+                    <div id="buttonsContainer" class="buttons"></div>
+                </div>
+        </dialog>
+        
+        <!-- Map -->
+        <div id="map"></div>
+
+        <!-- Show Dialog -->
+        <button id="show_dialog" class="is-full button is-primary is-responsive">Available routes</button>
     </div>
-    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
-    <script src="js/functions.js"></script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/functions.js"></script>
 </body>
 </html>

@@ -1,43 +1,107 @@
 .container {
-    display: flex;
-    flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 5px;
   margin-left: auto;
   margin-right: auto;
-  text-align: center;
+  text-align: left;
+  position: relative; /* Add this line */
 }
 
-.line {
-    display: grid;
-    align-items: center;
-    margin-right: 10px;
-    margin-bottom: 10px;
+dialog {
+  position: fixed;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
 }
 
-.line span {
-    margin-right: 10px;
-    font-weight: bold;
+#show_dialog {
+  /* big button with space under it */
+  margin-top: 10px;
+  position: relative;
+  z-index: 1;
+  font-size: 20px;
+  width: 100%;
+  height: 100%;
+}
+
+#close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
 }
 
 #map {
-    height: 50vh;
-    width: 100%;
-    max-width: 1000px;
+  height: 90vh;
+  width: 100%;
+  max-width: 100%;
+  z-index: 0;
+  position: relative;
 }
 
-@media (min-width: 600px) {
-    /* Apply these styles for screens wider than 768px */
-    #map {
-      max-width: none;
-      width: 100vw;
-      position: relative;
-      left: 50%;
-      transform: translateX(-50%);
-    }
+.buttons {
+  display: grid;
+  grid-auto-rows: min-content;
+  justify-content: start;
+  position: relative;
+  z-index: 1;
+}
+
+#buttonsContainer {
+  height: 100%;
+  max-height: 500px;
+  width: 100%;
+  overflow-y: auto;
+}
+
+/* Apply these styles for screens wider than 768px */
+@media (min-width: 768px) {
+  #map {
+    width: 100vw;
+    position: relative;
+  }
+}
+
+/* Add this media query for screens with a maximum width of 768px */
+@media (max-width: 768px) {
+  dialog {
+    width: 80%;
   }
 
+  /* Increase font size for dialog content */
+  dialog div,
+  dialog label,
+  dialog button {
+    font-size: 1.2em;
+  }
+
+  /* Adjust close button position */
+  #close {
+    top: 10px;
+    right: 10px;
+  }
+
+  /* Increase font size for button container */
+  #buttonsContainer {
+    font-size: 0.9em;
+  }
+
+  /* Increase button width and font size */
+  #buttonsContainer .wide-button {
+    width: 90%; /* Adjust button width */
+    font-size: 0.9em; /* Increase font size */
+  }
+
+  /* Decrease the size of map container */
+  #map {
+    height: calc(100vh - 130px);
+  }
+}
+
 .button.wide-button {
-    width: 100%;
-    margin-top: 10px;
+  width: 100%;
+  margin-top: 10px;
 }
 
 select {
