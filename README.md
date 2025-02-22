@@ -25,7 +25,7 @@ Or you can use Docker compose:
 And to stop the instance:
 `docker-compose down`
 
-# To do 🔨
+# Updates 🔨
 - [x] Update design for Mobile
 - [x] Update design for Desktop
 - [x] Add stops on the map
@@ -34,13 +34,16 @@ And to stop the instance:
 - [x] Draw map route for each Bus
 - [x] Create dockerized version
 - [x] Bus variants for all routes
+- [x] Add recent busses
+- [x] Fix bus stops - only show the stops for the selected route
+- [x] Handle multiple busses on the same route
 
 # Bugs 😔
-- [ ] The logic for obtaining and displaying the stop markers is too simplistic and does not account for all possible scenarios and right now some stops are missing or shown wrong
+- [👀] Not yet
 
 # Icons
 - [FlatIcon.com](https://www.flaticon.com/)
 
 # Dependencies
 - Leaflet 1.9.4
-- Bulma 1.0.0
+- Bulma 1.0.2

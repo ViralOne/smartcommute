@@ -70,27 +70,43 @@ function setInitialView() {
         })
         .catch(error => console.error(error));
 }
+var busMarkers = new Map();
 
-// Update the map with the latest data
 function updateMap() {
     fetch(url)
         .then(response => response.json())
         .then(data => {
-            // Get the latitude and longitude from the JSON data
             if (data.vehiclesByLineAndDirection && data.vehiclesByLineAndDirection.length > 0) {
-                const lat = data.vehiclesByLineAndDirection[0].lat / 1000000;
-                const lng = data.vehiclesByLineAndDirection[0].lng / 1000000;
-
-                // Update the marker position
-                marker.setLatLng([lat, lng]);
-
-                // Update map view to center on the marker
-                if (document.getElementById("followMarker").checked) {
-                    map.setView([lat, lng]);
+                // Clear old markers that are no longer present
+                const currentVehicleIds = new Set(data.vehiclesByLineAndDirection.map(vehicle => vehicle.id));
+                for (const [vehicleId, marker] of busMarkers) {
+                    if (!currentVehicleIds.has(vehicleId)) {
+                        map.removeLayer(marker);
+                        busMarkers.delete(vehicleId);
+                    }
                 }
-                
-                // Place stop markers
-                getStops();                
+
+                data.vehiclesByLineAndDirection.forEach(vehicle => {
+                    const lat = vehicle.lat / 1000000;
+                    const lng = vehicle.lng / 1000000;
+                    
+                    if (busMarkers.has(vehicle.id)) {
+                        // Update existing marker position
+                        busMarkers.get(vehicle.id).setLatLng([lat, lng]);
+                    } else {
+                        const newMarker = L.marker([lat, lng], {icon: busIcon})
+                            .addTo(map)
+                            .bindPopup(`Bus ID: ${vehicle.id}`);
+                        busMarkers.set(vehicle.id, newMarker);
+                    }
+                });
+                // Center map on first bus if follow is enabled
+                if (document.getElementById("followMarker").checked && data.vehiclesByLineAndDirection.length > 0) {
+                    const firstBus = data.vehiclesByLineAndDirection[0];
+                    map.setView([firstBus.lat / 1000000, firstBus.lng / 1000000]);
+                }
+
+                getStops();
 
                 if (document.getElementById("getUserLiveLocation").checked) {
                     if (shareLocation !== true) {
@@ -102,20 +118,16 @@ function updateMap() {
                                 console.error(error);
                             });
                     }
-                }
-                else{
+                } else {
                     shareLocation = false;
                 }
-                // Draw map route
+
                 drawRoute(busNumber, globalVariant);
                 updateBtnName(busNumber);
             } else {
-                console.log("GPS Autobuz offline")
+                console.log("GPS Autobuz offline");
                 drawRoute(busNumber, globalVariant);
-                
-                // All the busses have an working interval
-                // In case of error (ex. the bus is not sending GPS coordinates anymore) enable the flag
-                stopRefresh = true
+                stopRefresh = true;
             }
         })
         .catch(error => {
@@ -159,8 +171,8 @@ function createButton(text, classes, clickHandler) {
 // Define all the possible route types
 const route_types = [  { text: 'Selecteaza traseu', ids: [] },
   { text: 'Trasee principale', ids: [1, 2, 3, 4, 5] },
-  { text: 'Trasee secundare', ids: Array.from({ length: 14 }, (_, i) => i + 6) },
-  { text: 'Trasee profesionale', ids: Array.from({ length: 9 }, (_, i) => i + 111) },
+  { text: 'Trasee secundare', ids: Array.from({ length: 14 }, (_, i) => i + 7) },
+  { text: 'Trasee profesionale', ids: [...Array.from({ length: 8 }, (_, i) => i + 111), 211, 213, 214, 215, 217] },
   { text: 'Trasee elevi', ids: Array.from({ length: 7 }, (_, i) => i + 71) },
   { text: 'Trasee turistice', ids: [22] }
 ];
@@ -197,38 +209,32 @@ function fetchLines() {
         .catch(error => console.error(error));
 }
 
-// Update the displayed bus routes based on the selected route type
 function updateLines(selectedOption, lines, container_buttons) {
     // Filter the available bus routes by the selected route type
     const filteredLines = lines.filter(line => route_types.find(option => option.text === selectedOption).ids.includes(line.id));
     container_buttons.innerHTML = '';
     
-    // Create a button element for each bus route and add them to the container
     const lineElems = filteredLines.map(line => createLineElement(line, selectedOption));
     lineElems.forEach(element_linie_bus => {
         container_buttons.appendChild(element_linie_bus);
     });
 }
 
-// Create a button element for a given bus route
 function createLineElement(line, selectedOption) {
     const [second_route_description, first_route_description] = line.description.split(':');
 
     const element_linie_bus = document.createElement('div');
     element_linie_bus.classList.add('line');
 
-    // Create a span element for the bus number and add it to the div
     const text_number_bus = document.createElement('span');
     text_number_bus.innerText = `Autobuz: ${line.id}`;
     element_linie_bus.appendChild(text_number_bus);
 
-    // Create a button for the first route and add it to the div
     const first_route = createButton(first_route_description, ['is-full'], () => {
         window.location.href = `?bus=${line.id}&way=tour&type=${selectedOption}`;
     });
     element_linie_bus.appendChild(first_route);
 
-    // Create a button for the second route and add it to the div
     const second_route = createButton(second_route_description, ['is-outlined'], () => {
         window.location.href = `?bus=${line.id}&way=retour&type=${selectedOption}`;
     });
@@ -284,32 +290,32 @@ function getUserLocation() {
 }
 
 function getStops() {
-    fetch(baseURL + '/TripPlanner/service/stops')
+    fetch(baseURL + '/TripPlanner/service/stops/line/' + busNumber + '/direction/' + busDirection)
       .then(response => response.json())
       .then(data => {
-        let filteredStops = data.allStops;
-  
-        if (busNumber) {
-          filteredStops = filteredStops.filter(stop => {
-            const traversingLines = stop.traversingLines.split(",");
-            return traversingLines.includes(busNumber.trim());
-          });
+        let filteredStops = data.lineAndDirectionStops;
+        console.log('Route specific stops:', filteredStops);
+
+        // Clear existing stop markers if any
+        if (window.stopMarkersGroup) {
+            window.stopMarkersGroup.clearLayers();
+        } else {
+            window.stopMarkersGroup = L.layerGroup().addTo(map);
         }
-  
-        if (busDirection === 'tour') {
-          filteredStops = filteredStops.filter((stop, index) => index % 2 === 0);
-        } else if (busDirection === 'retour') {
-          filteredStops = filteredStops.filter((stop, index) => index % 2 === 1);
-        }
-  
-        // Loop through each stop and add a marker to the map
+
+        // Add markers for the stops on this specific route
         filteredStops.forEach(stop => {
-          const marker = L.marker([stop.lat / 1000000, stop.lng / 1000000], { icon: stopPinIcon, iconSize: [30, 30], bubblingMouseEvents: false })
-            .addTo(map)
-            .bindPopup(`Statie: ${stop.name}<br> Autobuze ce opresc la aceasta statie: ${stop.traversingLines}`);
+          const marker = L.marker([stop.lat / 1000000, stop.lng / 1000000], 
+            { icon: stopPinIcon, iconSize: [30, 30], bubblingMouseEvents: false })
+            .addTo(window.stopMarkersGroup)
+            .bindPopup(`
+                Statie: ${stop.name}<br>
+                Variant: ${stop.variant}<br>
+                Sequence: ${stop.sequence}
+            `);
         });
       })
-      .catch(error => console.error(error));
+      .catch(error => console.error('Error fetching stops:', error));
 }
 
 function updateBtnName(busNumber) {
