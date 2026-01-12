@@ -6,7 +6,8 @@
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  transition: background 0.3s ease;
 }
 
 .app-container {
@@ -18,7 +19,7 @@ body {
 
 /* Header */
 .app-header {
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.9);
   padding: 1rem;
   backdrop-filter: blur(10px);
   position: absolute;
@@ -47,7 +48,8 @@ body {
   right: 0;
   width: 350px;
   height: 100vh;
-  background: white;
+  background: #2c3e50;
+  color: #ecf0f1;
   box-shadow: -5px 0 20px rgba(0,0,0,0.1);
   z-index: 1001;
   transition: all 0.3s ease;
@@ -66,7 +68,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: linear-gradient(45deg, #3273dc, #209cee);
+  background: linear-gradient(45deg, #34495e, #2c3e50);
   color: white;
   min-height: 60px;
 }
@@ -100,8 +102,6 @@ body {
   flex-direction: column;
 }
 
-
-
 /* Form Elements */
 .field {
   margin-bottom: 1.5rem;
@@ -112,7 +112,17 @@ body {
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  color: #363636;
+  color: #ecf0f1;
+}
+
+.input, .select select {
+  background: #34495e;
+  color: #ecf0f1;
+  border-color: #4a5f7a;
+}
+
+.input::placeholder {
+  color: #95a5a6;
 }
 
 .checkbox input {
@@ -125,8 +135,8 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  background: #f8f9fa;
+  border: 1px solid #4a5f7a;
+  background: #34495e;
   margin-top: 1rem;
   width: 100%;
 }
@@ -140,10 +150,11 @@ body {
 }
 
 .line {
-  background: white;
+  background: #2c3e50;
   border-radius: 8px;
   padding: 1rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid #4a5f7a;
+  color: #ecf0f1;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
@@ -151,13 +162,13 @@ body {
 .line:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border-color: #3273dc;
+  border-color: #5dade2;
 }
 
 .line span {
   display: block;
   font-weight: 600;
-  color: #495057;
+  color: #ecf0f1;
   margin-bottom: 0.75rem;
   font-size: 0.9rem;
 }
@@ -180,6 +191,20 @@ body {
 @media (max-width: 768px) {
   .side-menu {
     width: 100vw;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .side-menu.show {
+    transform: translateX(0);
+  }
+  
+  .side-menu.left {
+    transform: translateX(-100%);
+  }
+  
+  .side-menu.left.show {
+    transform: translateX(0);
   }
   
   .app-header {
@@ -188,5 +213,33 @@ body {
   
   .app-header .title {
     font-size: 1.2rem;
+  }
+  
+  .mobile-menu-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1002;
+    background: #2c3e50;
+    color: #ecf0f1;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+  
+  .mobile-menu-toggle:hover {
+    background: #34495e;
+    transform: scale(1.1);
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-menu-toggle {
+    display: none;
   }
 }

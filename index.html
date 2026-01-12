@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body>
+<body class="dark-mode">
     <div class="app-container">
         <!-- Header -->
         <header class="app-header">
@@ -58,12 +58,6 @@
                 <!-- Features -->
                 <div class="field">
                     <label class="checkbox">
-                        <input type="checkbox" id="followMarker" checked>
-                        <i class="fas fa-crosshairs"></i> Follow Bus
-                    </label>
-                </div>
-                <div class="field">
-                    <label class="checkbox">
                         <input type="checkbox" id="getUserLiveLocation">
                         <i class="fas fa-location-dot"></i> My Location
                     </label>
@@ -108,8 +102,10 @@
         <!-- Map -->
         <div id="map"></div>
 
-        <!-- Menu Toggle Button (when collapsed) -->
-        
+        <!-- Mobile Menu Toggle Button -->
+        <button id="mobileMenuToggle" class="mobile-menu-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
     </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
