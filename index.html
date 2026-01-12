@@ -2,45 +2,114 @@
 <html>
 
 <head>
-    <title>Tursib LiveMap</title>
+    <title>🚌 SmartCommute LiveMap</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- include leaflet css and js -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.2/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <div class="containeru">
-        <!-- Dialog box -->
-        <dialog>
-            <!-- Div for buttons -->
-            <button id="close" class="is-full button is-default is-responsive">Close</button>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="title is-4 has-text-white">
+                <i class="fas fa-bus"></i> SmartCommute
+            </h1>
+        </header>
 
-            <!-- Features -->
-            <div>
-                <input type="checkbox" id="followMarker" checked>
-                <label for="followMarker">Follow the Bus</label>
+        <!-- Side Menu -->
+        <div id="sideMenu" class="side-menu">
+            <div class="menu-header">
+                <h2 class="title is-6">
+                    <i class="fas fa-route"></i> Select Route
+                </h2>
+                <button id="moveMenu" class="menu-control" title="Move to other side">
+                    <i class="fas fa-exchange-alt"></i>
+                </button>
             </div>
-            <div>
-                <input type="checkbox" id="getUserLiveLocation">
-                <label for="getUserLiveLocation">Get my location</label>
-            </div>
-
-            <!-- Select route dropdown -->
-            <select id="route_selection" class="dropdown center "></select>
             
-            <!-- Buttons container -->
-            <div class="scroll">
-                    <div id="buttonsContainer" class="buttons"></div>
+            <div class="menu-content">
+                <!-- Search Section -->
+                <div class="field">
+                    <div class="control has-icons-left">
+                        <input class="input" type="text" id="searchInput" placeholder="Search routes or stops...">
+                        <div class="icon is-small is-left">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
                 </div>
-        </dialog>
+
+                <!-- Filter Section -->
+                <div class="field">
+                    <div class="control">
+                        <div class="select is-fullwidth">
+                            <select id="filterSelect">
+                                <option value="all">All Routes</option>
+                                <option value="active">Active Only</option>
+                                <option value="inactive">Inactive Only</option>
+                                <option value="delayed">Delayed Routes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features -->
+                <div class="field">
+                    <label class="checkbox">
+                        <input type="checkbox" id="followMarker" checked>
+                        <i class="fas fa-crosshairs"></i> Follow Bus
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="checkbox">
+                        <input type="checkbox" id="getUserLiveLocation">
+                        <i class="fas fa-location-dot"></i> My Location
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="checkbox">
+                        <input type="checkbox" id="showAllBuses">
+                        <i class="fas fa-bus"></i> Show All Buses
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="checkbox">
+                        <input type="checkbox" id="showAllStops">
+                        <i class="fas fa-map-pin"></i> Show All Stops
+                    </label>
+                </div>
+                <div class="field">
+                    <button id="findNearestStops" class="button is-info is-fullwidth">
+                        <i class="fas fa-location-arrow"></i> Find Nearest Stops
+                    </button>
+                </div>
+
+                <!-- Select route dropdown -->
+                <div class="field">
+                    <div class="control has-icons-left">
+                        <div class="select is-fullwidth">
+                            <select id="route_selection"></select>
+                        </div>
+                        <div class="icon is-small is-left">
+                            <i class="fas fa-list"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Routes container -->
+                <div class="routes-container">
+                    <div id="buttonsContainer" class="buttons-grid"></div>
+                </div>
+            </div>
+        </div>
         
         <!-- Map -->
         <div id="map"></div>
 
-        <!-- Show Dialog -->
-        <button id="show_dialog" class="is-full button is-primary is-responsive">Available routes</button>
+        <!-- Menu Toggle Button (when collapsed) -->
+        
     </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

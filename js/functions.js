@@ -1,14 +1,25 @@
 // Define flags
 let stopRefresh = false;
 let shareLocation = false;
+let allBusesMarkers = new Map();
+let allStopsMarkers = null;
+let allLinesData = [];
+let allStopsData = [];
+let allVehiclesData = [];
 
 // Initialize the map with a default location and zoom level
 const map = L.map('map').setView([0, 0], 1);
 
-// Create marker icon for the bus
+// Create marker icon for the bus with different colors
 var busIcon = L.icon({
     iconUrl: 'img/bus.png',
     iconSize: [40, 40]
+});
+
+// Create smaller bus icon for all buses view
+var smallBusIcon = L.icon({
+    iconUrl: 'img/bus.png',
+    iconSize: [24, 24]
 });
 
 // Create marker icon for stops
@@ -26,7 +37,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const mapZoom = 15;
 const busNumber = urlParams.get('bus');
 const busDirection = urlParams.get('way');
-const baseURL = 'http://81.196.186.121:8080'
+const baseURL = 'http://86.127.97.204:8080'
 const url = baseURL + '/TripPlanner/service/vehicles/line/' + busNumber + '/direction/' + busDirection;
 var busLinesColor = ['red', 'blue', 'green'];
 var globalVariant = [];
@@ -90,13 +101,35 @@ function updateMap() {
                     const lat = vehicle.lat / 1000000;
                     const lng = vehicle.lng / 1000000;
                     
+                    // Get punctuality and loading info
+                    const punctuality = vehicle.punctuality;
+                    let statusText = 'On time';
+                    let statusColor = 'green';
+                    
+                    if (punctuality > 300) {
+                        statusText = `${Math.round(punctuality/60)} min late`;
+                        statusColor = 'red';
+                    } else if (punctuality < -300) {
+                        statusText = `${Math.round(Math.abs(punctuality)/60)} min early`;
+                        statusColor = 'blue';
+                    }
+                    
+                    const loadingDegree = vehicle.loadingDegree;
+                    const loadingText = ['🟢 Empty', '🟡 Normal', '🟠 Crowded', '🔴 Full'][loadingDegree] || 'Unknown';
+                    
                     if (busMarkers.has(vehicle.id)) {
                         // Update existing marker position
                         busMarkers.get(vehicle.id).setLatLng([lat, lng]);
                     } else {
                         const newMarker = L.marker([lat, lng], {icon: busIcon})
                             .addTo(map)
-                            .bindPopup(`Bus ID: ${vehicle.id}`);
+                            .bindPopup(`
+                                <strong>🚌 Route ${busNumber}</strong><br>
+                                Status: <span style="color: ${statusColor}; font-weight: bold;">${statusText}</span><br>
+                                Passengers: ${loadingText}<br>
+                                Bus ID: ${vehicle.id}<br>
+                                Journey: ${vehicle.journeyId}
+                            `);
                         busMarkers.set(vehicle.id, newMarker);
                     }
                 });
@@ -124,6 +157,16 @@ function updateMap() {
 
                 drawRoute(busNumber, globalVariant);
                 updateBtnName(busNumber);
+                
+                // Handle all buses view
+                if (document.getElementById("showAllBuses").checked) {
+                    showAllBuses();
+                }
+                
+                // Handle all stops view
+                if (document.getElementById("showAllStops").checked) {
+                    showAllStops();
+                }
             } else {
                 console.log("GPS Autobuz offline");
                 drawRoute(busNumber, globalVariant);
@@ -161,20 +204,24 @@ function autoRefresh() {
 function createButton(text, classes, clickHandler) {
     const button = document.createElement('button');
     button.innerText = text;
-    button.classList.add(classes, 'button', 'is-primary', 'is-responsive', 'wide-button');
+    button.classList.add('button', 'is-primary', 'is-fullwidth');
+    if (classes.includes('is-outlined')) {
+        button.classList.add('is-outlined');
+    }
 
     button.addEventListener('click', clickHandler);
-
     return button;
 }
 
 // Define all the possible route types
-const route_types = [  { text: 'Selecteaza traseu', ids: [] },
-  { text: 'Trasee principale', ids: [1, 2, 3, 4, 5] },
-  { text: 'Trasee secundare', ids: Array.from({ length: 14 }, (_, i) => i + 7) },
-  { text: 'Trasee profesionale', ids: [...Array.from({ length: 8 }, (_, i) => i + 111), 211, 213, 214, 215, 217] },
-  { text: 'Trasee elevi', ids: Array.from({ length: 7 }, (_, i) => i + 71) },
-  { text: 'Trasee turistice', ids: [22] }
+const route_types = [
+  { text: 'Selecteaza traseu', ids: [] },
+  { text: 'Trasee principale', ids: [1, 2, 3, 5] },
+  { text: 'Trasee secundare', ids: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] },
+  { text: 'Trasee profesionale', ids: [...Array.from({ length: 8 }, (_, i) => i + 111), 7, 24, 211, 213, 214, 215, 217] },
+  { text: 'Trasee elevi', ids: [71, 72, 73, 74, 75, 76, 77, 78] },
+  { text: 'Trasee turistice', ids: [22] },
+  { text: 'Trasee metropolitane', ids: [500, 510, 520, 525, 530, 540, 550, 560, 561, 570, 571, 580, 581, 582] }
 ];
 
 // Call API to fetch all the Bus Routes and create the buttons
@@ -183,6 +230,7 @@ function fetchLines() {
         .then(response => response.json())
         .then(data => {
             const lines = data.allLines;
+            allLinesData = lines; // Store for search
             const dropdown_route_list = document.getElementById('route_selection');
             const container_buttons = document.getElementById('buttonsContainer');
             
@@ -227,15 +275,17 @@ function createLineElement(line, selectedOption) {
     element_linie_bus.classList.add('line');
 
     const text_number_bus = document.createElement('span');
-    text_number_bus.innerText = `Autobuz: ${line.id}`;
+    // Display E1, E2, etc. for student routes (71-78), otherwise show normal route number
+    const displayId = (line.id >= 71 && line.id <= 78) ? `E${line.id - 70}` : line.id;
+    text_number_bus.innerHTML = `<i class="fas fa-bus"></i> Traseu ${displayId}`;
     element_linie_bus.appendChild(text_number_bus);
 
-    const first_route = createButton(first_route_description, ['is-full'], () => {
+    const first_route = createButton(`📍 ${first_route_description}`, ['is-full'], () => {
         window.location.href = `?bus=${line.id}&way=tour&type=${selectedOption}`;
     });
     element_linie_bus.appendChild(first_route);
 
-    const second_route = createButton(second_route_description, ['is-outlined'], () => {
+    const second_route = createButton(`📍 ${second_route_description}`, ['is-outlined'], () => {
         window.location.href = `?bus=${line.id}&way=retour&type=${selectedOption}`;
     });
     element_linie_bus.appendChild(second_route);
@@ -319,15 +369,275 @@ function getStops() {
 }
 
 function updateBtnName(busNumber) {
-    var button = document.getElementById('show_dialog');
-    button.textContent = `Autobuz: ${busNumber} - Other Routes`;
+    // No longer needed as we have a persistent side menu
 }
 
-var dialog = document.querySelector('dialog');
-    document.querySelector('#show_dialog').onclick = function() {
-    dialog.show();
-};
+// Show all active buses on the map
+function showAllBuses() {
+    fetch(baseURL + '/TripPlanner/service/vehicles')
+        .then(response => response.json())
+        .then(data => {
+            allVehiclesData = data.allVehicles; // Store for filtering
+            displayFilteredBuses(allVehiclesData);
+        })
+        .catch(error => console.error('Error fetching all buses:', error));
+}
 
-document.querySelector('#close').onclick = function() {
-    dialog.close();
-};
+// Display filtered buses based on current filter
+function displayFilteredBuses(vehicles) {
+    // Clear old markers
+    allBusesMarkers.forEach(marker => map.removeLayer(marker));
+    allBusesMarkers.clear();
+    
+    vehicles.forEach(vehicle => {
+        if (vehicle.lineId > 0) { // Skip inactive buses
+            const lat = vehicle.lat / 1000000;
+            const lng = vehicle.lng / 1000000;
+            
+            // Get punctuality status
+            const punctuality = vehicle.punctuality;
+            let statusText = 'On time';
+            let statusColor = 'green';
+            
+            if (punctuality > 300) {
+                statusText = `${Math.round(punctuality/60)} min late`;
+                statusColor = 'red';
+            } else if (punctuality < -300) {
+                statusText = `${Math.round(Math.abs(punctuality)/60)} min early`;
+                statusColor = 'blue';
+            }
+            
+            // Get loading status
+            const loadingDegree = vehicle.loadingDegree;
+            const loadingText = ['Empty', 'Normal', 'Crowded', 'Full'][loadingDegree] || 'Unknown';
+            
+            const marker = L.marker([lat, lng], {icon: smallBusIcon})
+                .addTo(map)
+                .bindPopup(`
+                    <strong>Route ${vehicle.lineId}</strong><br>
+                    Status: <span style="color: ${statusColor}">${statusText}</span><br>
+                    Passengers: ${loadingText}<br>
+                    Bus ID: ${vehicle.id}
+                `);
+            
+            allBusesMarkers.set(vehicle.id, marker);
+        }
+    });
+}
+
+// Show all bus stops on the map
+function showAllStops() {
+    if (allStopsMarkers) return; // Already loaded
+    
+    fetch(baseURL + '/TripPlanner/service/stops')
+        .then(response => response.json())
+        .then(data => {
+            allStopsData = data.allStops; // Store for search
+            allStopsMarkers = L.layerGroup().addTo(map);
+            
+            data.allStops.forEach(stop => {
+                const lat = stop.lat / 1000000;
+                const lng = stop.lng / 1000000;
+                
+                const routes = stop.traversingLines.split(',').join(', ');
+                
+                const marker = L.marker([lat, lng], {
+                    icon: stopPinIcon,
+                    iconSize: [16, 16]
+                })
+                .addTo(allStopsMarkers)
+                .bindPopup(`
+                    <strong>${stop.name}</strong><br>
+                    Routes: ${routes}<br>
+                    Stop ID: ${stop.id}
+                `);
+            });
+        })
+        .catch(error => console.error('Error fetching all stops:', error));
+}
+
+// Search functionality
+function performSearch(query) {
+    const container = document.getElementById('buttonsContainer');
+    container.innerHTML = '';
+    
+    if (!query.trim()) {
+        // Show current route type selection if no search
+        const selectedOption = document.getElementById('route_selection').value;
+        if (selectedOption !== 'Selecteaza traseu') {
+            updateLines(selectedOption, allLinesData, container);
+        }
+        return;
+    }
+    
+    // Search routes
+    const matchingRoutes = allLinesData.filter(line => {
+        const displayId = (line.id >= 71 && line.id <= 78) ? `E${line.id - 70}` : line.id;
+        return displayId.toString().includes(query) || 
+               line.name.toLowerCase().includes(query.toLowerCase()) ||
+               line.description.toLowerCase().includes(query.toLowerCase());
+    });
+    
+    // Display search results
+    if (matchingRoutes.length > 0) {
+        const title = document.createElement('div');
+        title.innerHTML = `<strong>🔍 Found ${matchingRoutes.length} routes:</strong>`;
+        title.style.padding = '0.5rem';
+        title.style.marginBottom = '0.5rem';
+        container.appendChild(title);
+        
+        matchingRoutes.forEach(line => {
+            const element = createLineElement(line, 'Search Results');
+            container.appendChild(element);
+        });
+    } else {
+        container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #666;">No routes found</div>';
+    }
+}
+
+// Filter buses based on selected filter
+function applyBusFilter(filterType) {
+    if (!allVehiclesData.length) return;
+    
+    let filteredVehicles = allVehiclesData;
+    
+    switch(filterType) {
+        case 'active':
+            filteredVehicles = allVehiclesData.filter(v => v.lineId > 0);
+            break;
+        case 'inactive':
+            filteredVehicles = allVehiclesData.filter(v => v.lineId === 0);
+            break;
+        case 'delayed':
+            filteredVehicles = allVehiclesData.filter(v => v.punctuality > 300);
+            break;
+        default:
+            filteredVehicles = allVehiclesData;
+    }
+    
+    displayFilteredBuses(filteredVehicles);
+}
+
+// Find nearest stops to user location
+function findNearestStops() {
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by this browser.');
+        return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(position => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        
+        if (!allStopsData.length) {
+            alert('Please enable "Show All Stops" first to load stop data.');
+            return;
+        }
+        
+        // Calculate distances and find nearest 5 stops
+        const stopsWithDistance = allStopsData.map(stop => {
+            const stopLat = stop.lat / 1000000;
+            const stopLng = stop.lng / 1000000;
+            const distance = getDistance(userLat, userLng, stopLat, stopLng);
+            return { ...stop, distance };
+        });
+        
+        const nearestStops = stopsWithDistance
+            .sort((a, b) => a.distance - b.distance)
+            .slice(0, 5);
+        
+        // Display results
+        const container = document.getElementById('buttonsContainer');
+        container.innerHTML = '';
+        
+        const title = document.createElement('div');
+        title.innerHTML = `<strong>📍 Nearest Stops:</strong>`;
+        title.style.padding = '0.5rem';
+        title.style.marginBottom = '0.5rem';
+        container.appendChild(title);
+        
+        nearestStops.forEach(stop => {
+            const stopElement = document.createElement('div');
+            stopElement.classList.add('line');
+            stopElement.innerHTML = `
+                <span><i class="fas fa-map-pin"></i> ${stop.name}</span>
+                <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
+                    Distance: ${Math.round(stop.distance)}m<br>
+                    Routes: ${stop.traversingLines.split(',').join(', ')}
+                </div>
+            `;
+            stopElement.style.cursor = 'pointer';
+            stopElement.addEventListener('click', () => {
+                map.setView([stop.lat / 1000000, stop.lng / 1000000], 16);
+            });
+            container.appendChild(stopElement);
+        });
+        
+    }, error => {
+        alert('Unable to get your location. Please enable location services.');
+    });
+}
+
+// Calculate distance between two points in meters
+function getDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lng2-lng1) * Math.PI/180;
+    
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    
+    return R * c;
+}
+
+// Side Menu functionality
+const sideMenu = document.getElementById('sideMenu');
+const moveMenu = document.getElementById('moveMenu');
+
+moveMenu.addEventListener('click', () => {
+    sideMenu.classList.toggle('left');
+});
+
+// Event listeners for new features
+document.getElementById('showAllBuses').addEventListener('change', function() {
+    if (this.checked) {
+        showAllBuses();
+    } else {
+        // Clear all buses markers
+        allBusesMarkers.forEach(marker => map.removeLayer(marker));
+        allBusesMarkers.clear();
+    }
+});
+
+document.getElementById('showAllStops').addEventListener('change', function() {
+    if (this.checked) {
+        showAllStops();
+    } else {
+        // Clear all stops markers
+        if (allStopsMarkers) {
+            map.removeLayer(allStopsMarkers);
+            allStopsMarkers = null;
+        }
+    }
+});
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function() {
+    const query = this.value.trim();
+    performSearch(query);
+});
+
+// Filter functionality
+document.getElementById('filterSelect').addEventListener('change', function() {
+    const filterType = this.value;
+    if (document.getElementById('showAllBuses').checked) {
+        applyBusFilter(filterType);
+    }
+});
+
+// Nearest stops functionality
+document.getElementById('findNearestStops').addEventListener('click', findNearestStops);
